@@ -1,0 +1,5 @@
+<Scenario>
+	<Quadrants TL="0" TR="1" BL="0" BR="0" />
+	<Target Id="Random" />
+	<Robots Blue="Random" Green="Random" Yellow="Random" Red="Random" />
+</Scenario>
