@@ -1,0 +1,5 @@
+<Module Name="VersatileCognitiveModule">
+
+  <BehaviorModule Command="build_PrologBehaviorModule.bat" Source="prolog/IA41-P2014/07/think.pl" Output="BM_Supervisor" />
+
+</Module>
