@@ -35,6 +35,7 @@ void StateManager::SetState(State *a_state)
 
 void StateManager::PopState()
 {
+
     if(!m_stateStack.empty()){
         m_stateStack.top()->Free();
         m_stateStack.pop();

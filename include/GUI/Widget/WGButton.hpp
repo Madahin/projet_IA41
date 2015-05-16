@@ -18,6 +18,7 @@ public:
     bool Clicked(sf::Vector2i a_MousePos) override;
 
     void SetRect(float a_fLeft, float a_fTop, float a_fWidth, float a_fHeight);
+    void SetTexRect(const sf::IntRect& texRect);
     void SetName(const std::string& a_sName);
 
 private:

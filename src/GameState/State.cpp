@@ -1,6 +1,7 @@
 #include "include/GameState/State.hpp"
 
 State::State() :
+    m_input(InputManager::Get()),
     m_manager(nullptr)
 {
 

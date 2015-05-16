@@ -1,8 +1,9 @@
-#ifndef STATE
-#define STATE
+#ifndef STATE_HPP
+#define STATE_HPP
 
 #include <SFML/Graphics.hpp>
 #include "include/Manager/StateManager.hpp"
+#include "include/Manager/InputManager.hpp"
 
 class StateManager;
 
@@ -22,8 +23,9 @@ public:
 
     void SetManager(StateManager* a_manager);
 
-private:
+protected:
+    InputManager& m_input;
     StateManager* m_manager;
 };
 
-#endif
+#endif // STATE_HPP

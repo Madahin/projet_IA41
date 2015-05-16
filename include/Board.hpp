@@ -1,0 +1,33 @@
+#ifndef BOARD_HPP
+#define BOARD_HPP
+
+#include <array>
+#include "include/Tools/Tools.hpp"
+#include "include/Case.hpp"
+#include "include/BoardState.hpp"
+
+class Board
+{
+public:
+    static Board& Get();
+
+    bool Empty();
+
+    void SetGameType(int type);
+    int GetGameType();
+
+    bool IsPlayerIA(bool player);
+
+    BoardState& GetCurrentState();
+
+    void InverseOrder();
+
+private:
+    Board();
+    BoardState m_CurrentState;
+    int m_gameType;
+    bool m_isPlayer1IA;
+    bool m_isPlayer2IA;
+};
+
+#endif // BOARD_HPP

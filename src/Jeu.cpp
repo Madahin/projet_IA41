@@ -7,12 +7,12 @@ Jeu::Jeu() :
 
 void Jeu::launch()
 {
-    m_window.create(sf::VideoMode(1024, 780, 32), "IA41-Puissance3");
+    m_window.create(sf::VideoMode(768, 768, 32), "IA41-Puissance3");
     m_window.setVerticalSyncEnabled(true);
 
     InputManager& t_Input = InputManager::Get();
     t_Input.SetWindow(m_window);
-    m_manager.PushState(new StateInGame);
+    m_manager.PushState(new StateMenu);
 
     bool t_bIsOpen = true;
 
