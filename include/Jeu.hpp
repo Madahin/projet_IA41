@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include "include/Manager/InputManager.hpp"
 #include "include/Manager/StateManager.hpp"
-#include "include/GameState/StateInGame.hpp"
+#include "include/GameState/StateMenu.hpp"
 
 class Jeu
 {

@@ -7,11 +7,8 @@ WGButton::WGButton(const sf::FloatRect &a_Pos, const std::string& a_sName, const
     m_Button.setTexture(m_Texture);
     SetRect(a_Pos.left, a_Pos.top, a_Pos.width, a_Pos.height);
     m_ButtonName.setString(a_sName);
-    m_ButtonName.setFont(ResourcesSingleton::Get().GetFont("Ressources/Fonts/Coval.otf"));
+    m_ButtonName.setFont(ResourcesSingleton::Get().GetFont("Ressources/Fonts/default.ttf"));
     CenterName();
-
-    AddOnClickDownBehavior([this](int i __attribute__((unused))){m_ButtonName.setString("poulpe");});
-    AddOnClickUpBehavior([this, a_sName](int i __attribute__((unused))){m_ButtonName.setString(a_sName);});
 }
 
 WGButton::~WGButton()
@@ -29,9 +26,12 @@ bool WGButton::Control(sf::Event &a_Event)
     return false;
 }
 
+#include <iostream>
+
 bool WGButton::Clicked(sf::Vector2i a_MousePos)
 {
-    if(m_Button.getGlobalBounds().contains(a_MousePos.x, a_MousePos.y)){
+    if(m_Position.contains(a_MousePos.x, a_MousePos.y)){
+        //std::cout << m_Position.left << ", " << m_Position.top << ", " << m_Position.width << ", " << m_Position.height << std::endl;
         return true;
     }
     return false;
@@ -43,6 +43,11 @@ void WGButton::SetRect(float a_fLeft, float a_fTop, float a_fWidth, float a_fHei
     m_Button.setPosition(m_Position.left, m_Position.top);
     m_Button.setScale(m_Position.width / m_Button.getLocalBounds().width, m_Position.height / m_Button.getLocalBounds().height);
     CenterName();
+}
+
+void WGButton::SetTexRect(const sf::IntRect &texRect)
+{
+    m_Button.setTextureRect(texRect);
 }
 
 void WGButton::SetName(const std::string &a_sName)
