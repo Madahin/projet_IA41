@@ -5,6 +5,7 @@
 #include "include/Tools/Tools.hpp"
 #include "include/Case.hpp"
 #include "include/BoardState.hpp"
+#include <cstdarg>
 
 class Board
 {

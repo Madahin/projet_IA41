@@ -3,13 +3,18 @@
 StateInGame::StateInGame() :
     m_EvenPhase(true),
     m_hasClicked(false),
-    m_ignoreFirstClick(false)
+    m_ignoreFirstClick(false),
+    m_hasWinner(false)
 {
     m_TokenTileset = ResourcesSingleton::Get().GetTexture("Ressources/Texture/Token.png");
     m_BoardTexture = ResourcesSingleton::Get().GetTexture("Ressources/Texture/board.png");
     m_BoardSprite.setTexture(m_BoardTexture);
 
     BoardState& b = Board::Get().GetCurrentState();
+
+    sf::Image moveTex;
+    moveTex.create(232, 232, sf::Color(143, 245, 111, 128));
+    m_moveTex.loadFromImage(moveTex);
 
     for(int x=0; x < 3; ++x){
         for(int y=0; y < 3; ++y){
@@ -20,6 +25,11 @@ StateInGame::StateInGame() :
                 emplacement.setPosition(36 + x*232, 36 + y*232);
                 m_EmplacementSprite.push_back(emplacement);
             }
+            sf::Sprite move;
+            move.setTexture(m_moveTex);
+            move.setPosition(36 + x*232, 36 + y*232);
+            m_AvaibleMove[3 * y + x] = move;
+            m_ShowAvaibleMove[3*y+x] = false;
         }
     }
 
@@ -34,6 +44,15 @@ StateInGame::StateInGame() :
         s.setPosition(-1000, -1000);
         m_TokenSprite[i] = s;
     }
+
+    m_WinnerText.setString("Win");
+    m_WinnerText.setFont(ResourcesSingleton::Get().GetFont("Ressources/Fonts/default.ttf"));
+    m_WinnerText.setColor(sf::Color::Black);
+    m_WinnerText.setPosition(290, 404);
+    m_WinnerText.setCharacterSize(128);
+    m_winnerSprite.setTexture(m_TokenTileset);
+    m_winnerSprite.setScale(1.5f, 1.5f);
+    m_winnerSprite.setPosition(210, 100);
 }
 
 void StateInGame::Init()
@@ -55,10 +74,29 @@ void StateInGame::Draw(sf::RenderWindow &a_window)
     for(auto &s : m_TokenSprite){
         a_window.draw(s);
     }
+
+    for(unsigned int i=0; i < m_ShowAvaibleMove.size() ; ++i){
+        if(m_ShowAvaibleMove[i]){
+            a_window.draw(m_AvaibleMove[i]);
+        }
+    }
+
+    if(m_hasWinner){
+        a_window.draw(m_winnerSprite);
+        a_window.draw(m_WinnerText);
+    }
 }
 
 void StateInGame::Event()
 {
+    if(m_hasWinner){
+        if(m_input.CanGetEvent()){
+            if(m_input.GetMousePhase() == InputManager::MOUSE_PHASE::UP){
+                // TODO : return to main screen
+            }
+        }
+        return;
+    }
     if(Board::Get().GetGameType() == 2 || Board::Get().IsPlayerIA(m_EvenPhase))return;
     if(m_input.CanGetEvent()){
         switch(m_input.GetMousePhase())
@@ -85,10 +123,13 @@ void StateInGame::Event()
                     m_CurrentPlayerMove.player = m_EvenPhase;
                     m_CurrentPlayerMove.tokenPos = caseTouch;
                     m_hasClicked = true;
+                    m_CurrentPlayerMove.moveType = PLACE_TOKEN;
+                    ComputePlayableMove();
                 }else{
-                    if(m_CurrentPlayerMove.tokenPos == caseTouch && c.tokenColor == Color::EMPTY){
-                        m_CurrentPlayerMove.moveType = PLACE_TOKEN;
-                    }else{
+                    if(m_CurrentPlayerMove.tokenPos == caseTouch && c.tokenColor != Color::EMPTY){
+                        m_hasClicked = false;
+                    }
+                    if(!(m_CurrentPlayerMove.tokenPos == caseTouch && c.tokenColor == Color::EMPTY)){
                         if(!c.hasEmplacement){
                             sf::Vector2i deltaPos = m_CurrentPlayerMove.tokenPos - caseTouch;//sf::Vector2i(caseTouch.x - c.position.x, caseTouch.y - c.position.y);
                             std::cout << "delta : " << deltaPos.x << ", " << deltaPos.y << std::endl;
@@ -106,16 +147,19 @@ void StateInGame::Event()
                                 if(deltaPos.y == -2)m_CurrentPlayerMove.multiMove = true;
                             }else{
                                 m_hasClicked = false;
+                                ComputePlayableMove();
                                 return;
                             }
                             m_CurrentPlayerMove.moveType = MOVE_EMPLACEMENT;
                         }else{
                             m_hasClicked = false;
+                            ComputePlayableMove();
                             return;
                         }
                     }
                     PlayMove(m_CurrentPlayerMove);
                     m_hasClicked = false;
+                    ComputePlayableMove();
                     m_CurrentPlayerMove.multiMove = false;
                     m_IAClock.restart();
                 }
@@ -199,10 +243,39 @@ void StateInGame::PlayMove(Move m)
 {
     Board::Get().GetCurrentState().PlayMove(m);
     std::cout << "score : "  << Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) << std::endl;
-    if(Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) > 500){
+    if(abs(Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase)) > 500){
         std::cout << "player " << ((m_EvenPhase)?"White":"Black") << " Win !!!" << std::endl;
-    }else if(Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) < -500){
-        std::cout << "player " << ((!m_EvenPhase)?"White":"Black") << " Win !!!" << std::endl;
+        m_winnerSprite.setTextureRect(sf::IntRect(232 * ((m_EvenPhase)?1:2), 0, 232, 232));
+        m_WinnerText.setColor(sf::Color(0, 178, 5));
+        m_hasWinner = true;
     }
     m_EvenPhase = !m_EvenPhase;
+}
+
+void StateInGame::ComputePlayableMove()
+{
+    if(!m_hasClicked){
+        for(bool &b : m_ShowAvaibleMove){
+            b = false;
+        }
+        return;
+    }
+
+    Case c = Board::Get().GetCurrentState().getCase(m_CurrentPlayerMove.tokenPos.x, m_CurrentPlayerMove.tokenPos.y);
+
+    if(m_CurrentPlayerMove.moveType == PLACE_TOKEN && c.tokenColor == Color::EMPTY){
+        m_ShowAvaibleMove[3 * m_CurrentPlayerMove.tokenPos.y + m_CurrentPlayerMove.tokenPos.x] = true;
+    }
+
+    for(int x=0; x < 3; ++x){
+        for(int y=0; y < 3; ++y){
+            Case c = Board::Get().GetCurrentState().getCase(x, y);
+            if(!c.hasEmplacement){
+                if((m_CurrentPlayerMove.tokenPos.x == x) ||
+                   (m_CurrentPlayerMove.tokenPos.y == y)){
+                m_ShowAvaibleMove[3 * y + x] = true;
+                }
+            }
+        }
+    }
 }

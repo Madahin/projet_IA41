@@ -29,19 +29,25 @@ public:
 
 private:
     Move IAMovement();
+    void ComputePlayableMove();
     void PlayMove(Move m);
     void PrintPossibleMove(const std::vector<Move> &possibleMoves);
+    sf::Texture m_moveTex;
     autoTexture m_BoardTexture;
     autoTexture m_TokenTileset;
     sf::Sprite m_BoardSprite;
+    sf::Sprite m_winnerSprite;
+    sf::Text m_WinnerText;
     std::vector<sf::Sprite> m_EmplacementSprite;
     std::array<sf::Sprite, 6> m_TokenSprite;
+    std::array<sf::Sprite, 9> m_AvaibleMove;
+    std::array<bool, 9> m_ShowAvaibleMove;
     bool m_EvenPhase;
     sf::Clock m_IAClock;
     Move m_CurrentPlayerMove;
     bool m_hasClicked;
     bool m_ignoreFirstClick;
-
+    bool m_hasWinner;
 };
 
 #endif // STATEINGAME_HPP

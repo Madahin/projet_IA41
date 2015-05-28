@@ -51,6 +51,7 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
             m.moveType = MOVE_EMPLACEMENT;
             m.movingCase = std::make_pair(sf::Vector2i(1, 1), static_cast<CARDINAL>(i));
             m.multiMove = false;
+            m.tokenPos = sf::Vector2i(1, 1);
             possibleMove.push_back(m);
         }
     }
@@ -65,6 +66,7 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
             Move m;
             m.moveType = MOVE_EMPLACEMENT;
             m.movingCase = std::make_pair(sf::Vector2i(x, y), CARDINAL::NORD);
+            m.tokenPos = sf::Vector2i(x, y);
 
             m.multiMove = false;
 

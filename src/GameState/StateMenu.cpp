@@ -11,7 +11,14 @@ StateMenu::StateMenu()
     for(unsigned int i=0; i < buttonString.size(); ++i)
     {
         std::shared_ptr<Widget> button(new WGButton(sf::FloatRect(156, 150 + 150*i, 456, 122), buttonString[i], "Ressources/Texture/ButtonUP.png"));
-        button->AddOnClickUpBehavior([this,i](int id){if(i == 1)m_manager->PushState(new StateMenuColor);else m_manager->PushState(new StateInGame);Board::Get().SetGameType(i);});
+        button->AddOnClickUpBehavior([this,i](int id){
+            if(i == 1){
+                m_manager->PushState(new StateMenuColor);
+            }else{
+                m_manager->PushState(new StateInGame);
+                Board::Get().SetGameType(i);
+            }
+        });
         m_gui.AddWidget(button);
     }
 }
