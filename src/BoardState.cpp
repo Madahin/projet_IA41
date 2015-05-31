@@ -2,7 +2,8 @@
 
 BoardState::BoardState() :
     m_blackTokens(3),
-    m_whiteTokens(3)
+    m_whiteTokens(3),
+    m_isFirstMove(true)
 {
     for(int y=0; y < 3; ++y){
         for(int x=0; x < 3; ++x){
@@ -15,15 +16,13 @@ BoardState::BoardState() :
     }
 }
 
-BoardState::BoardState(const std::array<Case, 9> &newBoard) :
-    m_blackTokens(3),
-    m_whiteTokens(3)
+BoardState::BoardState(const BoardState &s) :
+    m_blackTokens(s.m_blackTokens),
+    m_whiteTokens(s.m_whiteTokens),
+    m_isFirstMove(s.m_isFirstMove)
 {
-    m_Board = newBoard;
-    for(const Case &c : m_Board){
-        if(c.tokenColor == Color::WHITE)m_whiteTokens--;
-        else if(c.tokenColor == Color::BLACK)m_blackTokens--;
-    }
+    m_Board = s.m_Board;
+    m_lastMove = s.m_lastMove;
 }
 
 std::vector<Move> BoardState::GetPossibleMove(bool player)
@@ -110,17 +109,33 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
         }
     }
 
+    if(!m_isFirstMove){
+        int index = -1;
+        unsigned int i = 0;
+        for(const Move &m : possibleMove){
+            if((m.moveType == MOVE_EMPLACEMENT) && (m.movingCase.second + m_lastMove.movingCase.second == 0) && (m.multiMove == m_lastMove.multiMove)){
+                index = i;
+                break;
+            }
+            i++;
+        }
+        if(index >= 0)possibleMove.erase(possibleMove.begin() + i);
+    }
+
     return possibleMove;
 }
 
-void BoardState::PlayMove(const Move& move)
+bool BoardState::PlayMove(const Move& move)
 {
     if(move.moveType == PLACE_TOKEN){
+        if(move.player && m_whiteTokens == 0)return false;
+        if(!move.player && m_blackTokens == 0)return false;
         Case c = getCase(move.tokenPos.x, move.tokenPos.y);
         c.tokenColor = (move.player) ? Color::WHITE : Color::BLACK;
         SetCase(move.tokenPos.x, move.tokenPos.y, c);
         (move.player) ? m_whiteTokens-- : m_blackTokens--;
     }else if(move.moveType == MOVE_EMPLACEMENT){
+        if(!m_isFirstMove && (move.movingCase.second + m_lastMove.movingCase.second == 0) && (move.multiMove == m_lastMove.multiMove))return false;
         sf::Vector2i posCase = move.movingCase.first;
         switch (move.movingCase.second) {
             case CARDINAL::NORD:
@@ -179,11 +194,14 @@ void BoardState::PlayMove(const Move& move)
                 break;
         }
     }
+    if(m_isFirstMove)m_isFirstMove = false;
+    m_lastMove = move;
+    return true;
 }
 
 const BoardState BoardState::SimulateMove(const Move& move)
 {
-    BoardState tmp(m_Board);
+    BoardState tmp(*this);
     tmp.PlayMove(move);
     return tmp;
 }
@@ -247,4 +265,13 @@ int BoardState::EvaluateLine(int x1, int y1, int x2, int y2, int x3, int y3, boo
     }
 
     return score;
+}
+
+short BoardState::GetPlacedToken(bool player)
+{
+    if(player){
+        return m_whiteTokens;
+    }else{
+        return m_blackTokens;
+    }
 }

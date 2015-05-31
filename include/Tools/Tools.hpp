@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-enum CARDINAL { EAST=0, WEST=1, SOUTH=3, NORD=2 };
+enum CARDINAL { EAST=1, WEST=-1, SOUTH=-2, NORD=2 };
 
 namespace Tools {
 

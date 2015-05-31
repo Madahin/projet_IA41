@@ -198,6 +198,8 @@ void StateInGame::Update()
         }
     }
 
+    if(m_hasWinner)return;
+
     if(Board::Get().IsPlayerIA(m_EvenPhase) && m_IAClock.getElapsedTime().asMilliseconds() > 1000){
         Move IAMove = IAMovement();
         PlayMove(IAMove);
@@ -241,7 +243,7 @@ Move StateInGame::IAMovement()
 
 void StateInGame::PlayMove(Move m)
 {
-    Board::Get().GetCurrentState().PlayMove(m);
+    if(!Board::Get().GetCurrentState().PlayMove(m))return;
     std::cout << "score : "  << Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) << std::endl;
     if(abs(Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase)) > 500){
         std::cout << "player " << ((m_EvenPhase)?"White":"Black") << " Win !!!" << std::endl;
@@ -261,9 +263,11 @@ void StateInGame::ComputePlayableMove()
         return;
     }
 
-    Case c = Board::Get().GetCurrentState().getCase(m_CurrentPlayerMove.tokenPos.x, m_CurrentPlayerMove.tokenPos.y);
+    BoardState cs = Board::Get().GetCurrentState();
 
-    if(m_CurrentPlayerMove.moveType == PLACE_TOKEN && c.tokenColor == Color::EMPTY){
+    Case c = cs.getCase(m_CurrentPlayerMove.tokenPos.x, m_CurrentPlayerMove.tokenPos.y);
+
+    if(m_CurrentPlayerMove.moveType == PLACE_TOKEN && c.tokenColor == Color::EMPTY && cs.GetPlacedToken(m_EvenPhase) > 0){
         m_ShowAvaibleMove[3 * m_CurrentPlayerMove.tokenPos.y + m_CurrentPlayerMove.tokenPos.x] = true;
     }
 
