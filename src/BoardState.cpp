@@ -62,13 +62,6 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
             Case c = getCase(x, y);
             if(c.hasEmplacement)continue;
 
-            //Move m = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::NORD), false};
-            //m.moveType = MOVE_EMPLACEMENT;
-            //m.movingCase = std::make_pair(sf::Vector2i(x, y), CARDINAL::NORD);
-            //m.tokenPos = sf::Vector2i(x, y);
-
-            //m.multiMove = false;
-
             if(x == 0 && y != 1){
                 Move m = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::WEST), false};
                 possibleMove.push_back(m);
@@ -266,19 +259,43 @@ bool BoardState::Empty()
 
 int BoardState::EvaluateFor(bool player)
 {
-    int boardScore = 0;
-    // Colone
-    boardScore += EvaluateLine(0, 0, 0, 1, 0, 2, player);
-    boardScore += EvaluateLine(1, 0, 1, 1, 1, 2, player);
-    boardScore += EvaluateLine(2, 0, 2, 1, 2, 2, player);
-    // Line
-    boardScore += EvaluateLine(0, 0, 1, 0, 2, 0, player);
-    boardScore += EvaluateLine(0, 1, 1, 1, 2, 1, player);
-    boardScore += EvaluateLine(0, 2, 1, 2, 2, 2, player);
-    // Diag
-    boardScore += EvaluateLine(0, 0, 1, 1, 2, 2, player);
-    boardScore += EvaluateLine(2, 0, 1, 1, 0, 2, player);
+    static const short WinningShot = 8;
+    static const short ThreeInARow[WinningShot][3][2] = {
+        {{0, 0}, {1, 0}, {2, 0}},
+        {{0, 1}, {1, 1}, {2, 1}},
+        {{0, 2}, {1, 2}, {2, 2}},
+        {{0, 0}, {0, 1}, {0, 2}},
+        {{1, 0}, {1, 1}, {1, 2}},
+        {{2, 0}, {2, 1}, {2, 2}},
+        {{0, 0}, {1, 1}, {2, 2}},
+        {{2, 0}, {1, 1}, {0, 2}}
+    };
 
+    static const int Heuristic_Array[4][4] = {
+        {     0,   -10,  -100, -1000 },
+        {    10,     0,     0,     0 },
+        {   100,     0,     0,     0 },
+        {  1000,     0,     0,     0 }
+    };
+
+    short playerScore(0), otherScore(0);
+    int boardScore = 0;
+
+    Color playerColor = ((player)?Color::WHITE:Color::BLACK);
+    Color otherColor = ((!player)?Color::WHITE:Color::BLACK);
+
+    for(int i=0; i < WinningShot; ++i){
+        playerScore = otherScore = 0;
+        for(int j=0; j < 3; ++j){
+            Case c = getCase(ThreeInARow[i][j][0], ThreeInARow[i][j][1]);
+            if(c.tokenColor == playerColor){
+                playerScore++;
+            }else if(c.tokenColor == otherColor){
+                otherScore++;
+            }
+        }
+        boardScore += Heuristic_Array[playerScore][otherScore];
+    }
     return boardScore;
 }
 
