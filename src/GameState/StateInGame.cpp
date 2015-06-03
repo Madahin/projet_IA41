@@ -111,10 +111,11 @@ void StateInGame::Event()
                 auto caseTouch = GetCaseClicked(mousePos);
                 if(caseTouch.x == -1)return;
 
-                std::cout << "caseTouch : " << caseTouch.x << ", " << caseTouch.y << std::endl;
+                std::cout << "click : " << caseTouch.x << ", " << caseTouch.y << std::endl;
 
                 Case c = Board::Get().GetCurrentState().getCase(caseTouch.x, caseTouch.y);
 
+                std::cout << "caseTouch : (" << c.position.x << ", " << c.position.y << ")" << std::endl;
                 if(!c.hasEmplacement){
                     if(!m_hasClicked)return;
                 }
@@ -228,22 +229,50 @@ sf::Vector2i StateInGame::GetCaseClicked(sf::Vector2i mousePos)
 void StateInGame::PrintPossibleMove(const std::vector<Move> &possibleMoves)
 {
     for(const Move &m : possibleMoves){
-        if(m.moveType == PLACE_TOKEN){
-            std::cout << "Place token " << ((m.player)?"white" : "black") << "in position (" << m.tokenPos.x << ", " << m.tokenPos.y << ")" << std::endl;
-        }else{
-            std::cout << "Move Emplacement (" << m.movingCase.first.x << ", " << m.movingCase.first.y << ") to " << m.movingCase.second << ((m.multiMove)?" double":" single") << std::endl;
+        PrintMove(m);
+    }
+}
+
+void StateInGame::PrintMove(const Move &m)
+{
+    if(m.moveType == PLACE_TOKEN){
+        std::cout << "Place token " << ((m.player)?"white" : "black") << "in position (" << m.tokenPos.x << ", " << m.tokenPos.y << ")" << std::endl;
+    }else{
+        std::string coord = "";
+        switch(m.movingCase.second)
+        {
+            case CARDINAL::EAST:
+                coord = "east";
+                break;
+            case CARDINAL::WEST:
+                coord = "west";
+                break;
+            case CARDINAL::NORD:
+                coord = "nord";
+                break;
+            case CARDINAL::SOUTH:
+                coord = "south";
+                break;
+            default:
+                coord = std::to_string(m.movingCase.second);
         }
+
+        std::cout << "Move Emplacement (" << m.movingCase.first.x << ", " << m.movingCase.first.y << ") to " << coord << ((m.multiMove)?" double":" single") << std::endl;
     }
 }
 
 Move StateInGame::IAMovement()
 {
-    return Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase).at(0);
+    std::vector<Move> moves;
+    moves = Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase);
+    return moves.at(0);
 }
 
 void StateInGame::PlayMove(Move m)
 {
     if(!Board::Get().GetCurrentState().PlayMove(m))return;
+    std::cout << ((m_EvenPhase)?"White":"Black") << " : ";
+    PrintMove(m);
     std::cout << "score : "  << Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) << std::endl;
     if(abs(Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase)) > 500){
         std::cout << "player " << ((m_EvenPhase)?"White":"Black") << " Win !!!" << std::endl;
@@ -252,6 +281,8 @@ void StateInGame::PlayMove(Move m)
         m_hasWinner = true;
     }
     m_EvenPhase = !m_EvenPhase;
+    PrintPossibleMove(Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase));
+    std::cout << "--------------------------" << std::endl;
 }
 
 void StateInGame::ComputePlayableMove()

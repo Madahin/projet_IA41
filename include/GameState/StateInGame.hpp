@@ -32,6 +32,7 @@ private:
     void ComputePlayableMove();
     void PlayMove(Move m);
     void PrintPossibleMove(const std::vector<Move> &possibleMoves);
+    void PrintMove(const Move &m);
     sf::Texture m_moveTex;
     autoTexture m_BoardTexture;
     autoTexture m_TokenTileset;

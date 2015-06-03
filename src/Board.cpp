@@ -1,13 +1,17 @@
 #include "include/Board.hpp"
 
+Board *Board::m_instance=nullptr;
+
 Board::Board()
 {
 }
 
 Board& Board::Get()
 {
-    static Board instance;
-    return instance;
+    if(m_instance == nullptr){
+        m_instance = (new Board);
+    }
+    return *m_instance;
 }
 
 void Board::SetGameType(int type)
