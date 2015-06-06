@@ -205,7 +205,6 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
                 possibleMove.erase(possibleMove.begin() + i);
                 i--;
             }
-            i++;
         }
     }
 
