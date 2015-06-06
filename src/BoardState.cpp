@@ -57,22 +57,90 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
 
     for(int y=0; y < 3; ++y){
         for(int x=0; x < 3; ++x){
+            Case c = getCase(x, y);
+
+            if(c.tokenColor != ((player)?Color::WHITE:Color::BLACK))continue;
+
+            Move m = {player, MOVE_TOKEN, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::EAST), false};
+
+            if(x == 0){
+                Case c2 = getCase(1, y);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::EAST;
+                    possibleMove.push_back(m);
+                }
+            }
+
+            if(x == 1){
+                Case c2 = getCase(0, y);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::WEST;
+                    possibleMove.push_back(m);
+                }
+                c2 = getCase(2, y);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::EAST;
+                    possibleMove.push_back(m);
+                }
+            }
+
+            if(x == 2){
+                Case c2 = getCase(2, y);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::WEST;
+                    possibleMove.push_back(m);
+                }
+            }
+
+            if(y == 0){
+                Case c2 = getCase(x, 1);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::SOUTH;
+                    possibleMove.push_back(m);
+                }
+            }
+
+            if(y == 1){
+                Case c2 = getCase(x, 0);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::SOUTH;
+                    possibleMove.push_back(m);
+                }
+                c2 = getCase(x, 2);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::NORD;
+                    possibleMove.push_back(m);
+                }
+            }
+
+            if(y == 2){
+                Case c2 = getCase(x, 2);
+                if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
+                    m.movingCase.second = CARDINAL::NORD;
+                    possibleMove.push_back(m);
+                }
+            }
+        }
+    }
+
+    for(int y=0; y < 3; ++y){
+        for(int x=0; x < 3; ++x){
             if(x==1 && y==1)continue;
 
             Case c = getCase(x, y);
             if(c.hasEmplacement)continue;
 
             if(x == 0 && y != 1){
-                Move m = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::WEST), false};
+                Move m = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::EAST), false};
                 possibleMove.push_back(m);
-                Move m2 = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::WEST), true};
+                Move m2 = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::EAST), true};
                 possibleMove.push_back(m2);
             }
 
             if(x == 2 && y != 1){
-                Move m = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::EAST), false};
+                Move m = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::WEST), false};
                 possibleMove.push_back(m);
-                Move m2 = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::EAST), true};
+                Move m2 = {player, MOVE_EMPLACEMENT, sf::Vector2i(x, y), std::make_pair(sf::Vector2i(x, y), CARDINAL::WEST), true};
                 possibleMove.push_back(m2);
             }
 
@@ -129,16 +197,20 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
     }
 
     if(!m_isFirstMove){
-        int index = -1;
-        unsigned int i = 0;
-        for(const Move &m : possibleMove){
-            if((m.moveType == MOVE_EMPLACEMENT) && (m.movingCase.second + m_lastMove.movingCase.second == 0) && (m.multiMove == m_lastMove.multiMove)){
-                index = i;
-                break;
+        for(unsigned int i=0 ; i < possibleMove.size(); ++i){
+            Move m = possibleMove.at(i);
+            /*if((((m.moveType == MOVE_EMPLACEMENT) && (m.multiMove == m_lastMove.multiMove)) || (m.moveType == MOVE_TOKEN))
+              && (m.movingCase.second + m_lastMove.movingCase.second == 0)){
+                possibleMove.erase(possibleMove.begin() + i);
+                i--;
+            }*/
+            if((m.movingCase.second + m_lastMove.movingCase.second) == 0 && (m.multiMove == m_lastMove.multiMove)){
+                possibleMove.erase(possibleMove.begin() + i);
+                i--;
             }
+
             i++;
         }
-        if(index >= 0)possibleMove.erase(possibleMove.begin() + i);
     }
 
     return possibleMove;
@@ -192,22 +264,6 @@ bool BoardState::PlayMove(const Move& move)
             }
             case CARDINAL::EAST:
             {
-                Case c2 = getCase(posCase.x - 1, posCase.y);
-                c1.position = sf::Vector2i(posCase.x - 1, posCase.y);
-                c2.position = sf::Vector2i(posCase.x, posCase.y);
-                SetCase(posCase.x - 1, posCase.y, c1);
-                SetCase(posCase.x, posCase.y, c2);
-                if(move.multiMove){
-                    Case c3 = getCase(posCase.x - 2, posCase.y);
-                    c1.position = sf::Vector2i(posCase.x - 2, posCase.y);
-                    c3.position = sf::Vector2i(posCase.x - 1, posCase.y);
-                    SetCase(posCase.x - 2, posCase.y, c1);
-                    SetCase(posCase.x - 1, posCase.y, c3);
-                }
-                break;
-            }
-            case CARDINAL::WEST:
-            {
                 Case c2 = getCase(posCase.x + 1, posCase.y);
                 c1.position = sf::Vector2i(posCase.x + 1, posCase.y);
                 c2.position = sf::Vector2i(posCase.x, posCase.y);
@@ -222,16 +278,66 @@ bool BoardState::PlayMove(const Move& move)
                 }
                 break;
             }
+            case CARDINAL::WEST:
+            {
+                Case c2 = getCase(posCase.x - 1, posCase.y);
+                c1.position = sf::Vector2i(posCase.x - 1, posCase.y);
+                c2.position = sf::Vector2i(posCase.x, posCase.y);
+                SetCase(posCase.x - 1, posCase.y, c1);
+                SetCase(posCase.x, posCase.y, c2);
+                if(move.multiMove){
+                    Case c3 = getCase(posCase.x - 2, posCase.y);
+                    c1.position = sf::Vector2i(posCase.x - 2, posCase.y);
+                    c3.position = sf::Vector2i(posCase.x - 1, posCase.y);
+                    SetCase(posCase.x - 2, posCase.y, c1);
+                    SetCase(posCase.x - 1, posCase.y, c3);
+                }
+                break;
+            }
             default:
                 break;
         }
+    }else if(move.moveType == MOVE_TOKEN){
+        if(!m_isFirstMove && (move.movingCase.second + m_lastMove.movingCase.second == 0))return false;
+        sf::Vector2i posCase = move.movingCase.first;
+        Case c1 = getCase(posCase.x, posCase.y);
+        Case c2;
+        switch (move.movingCase.second) {
+            case CARDINAL::NORD:
+            {
+                c2 = getCase(posCase.x, posCase.y - 1);
+                break;
+            }
+            case CARDINAL::SOUTH:
+            {
+                c2 = getCase(posCase.x, posCase.y + 1);
+                break;
+            }
+            case CARDINAL::EAST:
+            {
+                c2 = getCase(posCase.x + 1, posCase.y);
+                break;
+            }
+            case CARDINAL::WEST:
+            {
+                c2 = getCase(posCase.x - 1, posCase.y);
+                break;
+            }
+            default:
+                break;
+        }
+        Color tmp = c1.tokenColor;
+        c1.tokenColor = c2.tokenColor;
+        c2.tokenColor = tmp;
+        SetCase(c2.position.x, c2.position.y, c2);
+        SetCase(c1.position.x, c1.position.y, c1);
     }
     if(m_isFirstMove)m_isFirstMove = false;
     m_lastMove = move;
     return true;
 }
 
-const BoardState BoardState::SimulateMove(const Move& move)
+BoardState BoardState::SimulateMove(Move& move)
 {
     BoardState tmp(*this);
     tmp.PlayMove(move);

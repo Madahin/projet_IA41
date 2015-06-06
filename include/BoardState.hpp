@@ -14,7 +14,7 @@ public:
     BoardState(const BoardState &s);
     std::vector<Move> GetPossibleMove(bool player);
     bool PlayMove(const Move& move);
-    const BoardState SimulateMove(const Move& move);
+    BoardState SimulateMove(Move& move);
     const Case& getCase(int x, int y);
     bool Empty();
     int EvaluateFor(bool player);

@@ -6,6 +6,7 @@
 
 const int PLACE_TOKEN = 1;
 const int MOVE_EMPLACEMENT = 2;
+const int MOVE_TOKEN = 3;
 
 typedef struct{
     bool player;

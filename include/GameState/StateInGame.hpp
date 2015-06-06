@@ -16,6 +16,7 @@ class StateInGame : public State
 {
 public:
     StateInGame();
+    virtual ~StateInGame();
 
     void Init() override;
     void Free() override;
@@ -29,6 +30,7 @@ public:
 
 private:
     Move IAMovement();
+    int MinMax(BoardState &state, int depth, bool maxPlayer);
     void ComputePlayableMove();
     void PlayMove(Move m);
     void PrintPossibleMove(const std::vector<Move> &possibleMoves);
@@ -38,6 +40,7 @@ private:
     autoTexture m_TokenTileset;
     sf::Sprite m_BoardSprite;
     sf::Sprite m_winnerSprite;
+    sf::Sprite m_whosPlaying;
     sf::Text m_WinnerText;
     std::vector<sf::Sprite> m_EmplacementSprite;
     std::array<sf::Sprite, 6> m_TokenSprite;
@@ -49,6 +52,9 @@ private:
     bool m_hasClicked;
     bool m_ignoreFirstClick;
     bool m_hasWinner;
+    Color m_ColorClicked;
+
+    static const unsigned int MAX_DEPTH = 5;
 };
 
 #endif // STATEINGAME_HPP
