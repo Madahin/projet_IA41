@@ -349,7 +349,7 @@ Move StateInGame::IAMovement()
     possibleMoves = state.GetPossibleMove(player);
     // on parcours tous les mouvements possibles en exécutant l'algorithme
     for ( unsigned int i = 0; i < possibleMoves.size(); i++ ) {
-        int val = StateInGame::minimax(state.SimulateMove(possibleMoves.at(i)), maxDepth, alpha, beta, player);
+        int val = StateInGame::minimax(state.SimulateMove(possibleMoves.at(i)), maxDepth, alpha, beta, true, player);
         if (val > alpha) { // Si la solution a été trouvée
             alpha = val;
             finalMove = possibleMoves.at(i);
@@ -374,23 +374,21 @@ Move StateInGame::IAMovement()
  * @param max : boolean du joueur
  * @return  valeur de l'algorithme minimax avec étalage alpha-beta
  */
-int StateInGame::minimax(BoardState state, int depth, int a, int b, bool max)
+int StateInGame::minimax(BoardState state, int depth, int a, int b, bool max, bool player)
 {
-    // Evalue l'état passé en paramètres, s'il correspond
-    int evalState = state.EvaluateFor(max);
     // Si l'état de victoire est atteint, on renvoie directement l'information (c'est le meilleur coup)
     // ou si la profondeur à atteint son maximum, l'IA ne vois pas encore d'issues possible
-    if (evalState  >= 900 || depth == 0) {
-        return evalState; // random value test
+    if (state.IsEndOfGame(player) || depth == 0) {
+        return state.EvaluateFor(player); // random value test
     }
     // On récupère tout les mouvements possible de l'état actuel pour le joueur
     std::vector<Move> possibleMoves;
-    possibleMoves = state.GetPossibleMove(max);
+    possibleMoves = state.GetPossibleMove(player);
     if (max) {
         // Si on est dans le cas Max de l'algorithme, on parcours tous les mouvements possibles
         for (Move &move : possibleMoves) {
             // On applique le min entre alpha et le retour de la foncton minimax
-            a = std::max(a, minimax(state.SimulateMove(move), depth - 1, a, b, false));
+            a = std::max(a, minimax(state.SimulateMove(move), depth - 1, a, b, false, !player));
             if (b <= a) return b; //  beta stop car beta est inférieur à alpha (règle)
         }
         return a;
@@ -398,7 +396,7 @@ int StateInGame::minimax(BoardState state, int depth, int a, int b, bool max)
         // si on est dans le cas Min de l'algorithme, on parcours tous les mouvements possibles
         for (Move &move : possibleMoves) {
             // On applique le min entre beta et le retour de la foncton minimax
-            b = std::min(b, minimax(state.SimulateMove(move), depth - 1, a, b, true));
+            b = std::min(b, minimax(state.SimulateMove(move), depth - 1, a, b, true, !player));
             if (b <= a) return a; // beta stop car beta est inférieur à alpha (règle)
         }
         return b;
@@ -413,15 +411,15 @@ void StateInGame::PlayMove(Move m)
 
     std::cout << "score : "  << Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) << std::endl;
     int score = Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase);
-    bool winner = (std::abs(score) > 500)?true:false;
+    bool winner = Board::Get().GetCurrentState().IsEndOfGame(m_EvenPhase);
     bool whiteWin = false;
-    if(score > 500){
+    if(score >= 600){
         if(m_EvenPhase){
             whiteWin = true;
         }else{
             whiteWin = false;
         }
-    }else if(score < -500){
+    }else if(score <= -600){
         if(m_EvenPhase){
             whiteWin = false;
         }else{
@@ -480,41 +478,5 @@ void StateInGame::ComputePlayableMove()
                 m_ShowAvaibleMove[3 * pos.y + pos.x] = true;
             }
 
-    }
-}
-
-int StateInGame::MinMax(BoardState &state, int depth, bool maxPlayer)
-{
-    if(this == (void*)0xffffffff){
-        return 0;
-    }
-    if((depth == 0) || (abs(state.EvaluateFor(m_EvenPhase)) > 500)){
-        return state.EvaluateFor(m_EvenPhase);
-    }
-
-    if(maxPlayer){
-        int bestValue = -10000;
-        int index = 0;
-        std::vector<Move> moves = state.GetPossibleMove(m_EvenPhase);
-        for(unsigned int i=0; i < moves.size(); ++i){
-            Move m = moves[i];
-            BoardState s = state.SimulateMove(m);
-            int val = MinMax(s, depth-1, false);
-            bestValue = std::max(bestValue, val);
-            if(bestValue == val)index = i;
-        }
-        if(depth == MAX_DEPTH)
-            return index;
-        else return bestValue;
-    }else{
-        int bestValue = 10000;
-        std::vector<Move> moves = state.GetPossibleMove(m_EvenPhase);
-        for(unsigned int i=0; i < moves.size(); ++i){
-            Move m = moves[i];
-            BoardState s = state.SimulateMove(m);
-            int val = MinMax(s, depth-1, true);
-            bestValue = std::min(bestValue, val);
-        }
-        return bestValue;
     }
 }

@@ -7,6 +7,18 @@
 #include "include/move.hpp"
 #include "include/Case.hpp"
 
+static constexpr short WinningShot = 8;
+static constexpr short ThreeInARow[WinningShot][3][2] = {
+    {{0, 0}, {1, 0}, {2, 0}},
+    {{0, 1}, {1, 1}, {2, 1}},
+    {{0, 2}, {1, 2}, {2, 2}},
+    {{0, 0}, {0, 1}, {0, 2}},
+    {{1, 0}, {1, 1}, {1, 2}},
+    {{2, 0}, {2, 1}, {2, 2}},
+    {{0, 0}, {1, 1}, {2, 2}},
+    {{2, 0}, {1, 1}, {0, 2}}
+};
+
 class BoardState
 {
 public:
@@ -19,6 +31,7 @@ public:
     bool Empty();
     int EvaluateFor(bool player);
     short GetPlacedToken(bool player);
+    bool IsEndOfGame(bool player);
 
 private:
     int EvaluateLine(int x1, int y1, int x2, int y2, int x3, int y3, bool player);

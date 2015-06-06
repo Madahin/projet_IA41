@@ -222,7 +222,7 @@ bool BoardState::PlayMove(const Move& move)
         SetCase(move.tokenPos.x, move.tokenPos.y, c);
         (move.player) ? m_whiteTokens-- : m_blackTokens--;
     }else if(move.moveType == MOVE_EMPLACEMENT){
-        if(!m_isFirstMove && (move.movingCase.second + m_lastMove.movingCase.second == 0) && (move.multiMove == m_lastMove.multiMove))return false;
+        if(!m_isFirstMove && (move.moveType == m_lastMove.moveType) && (move.movingCase.second + m_lastMove.movingCase.second == 0) && (move.multiMove == m_lastMove.multiMove))return false;
         sf::Vector2i posCase = move.movingCase.first;
         Case c1 = getCase(posCase.x, posCase.y);
         switch (move.movingCase.second) {
@@ -363,23 +363,11 @@ bool BoardState::Empty()
 
 int BoardState::EvaluateFor(bool player)
 {
-    static const short WinningShot = 8;
-    static const short ThreeInARow[WinningShot][3][2] = {
-        {{0, 0}, {1, 0}, {2, 0}},
-        {{0, 1}, {1, 1}, {2, 1}},
-        {{0, 2}, {1, 2}, {2, 2}},
-        {{0, 0}, {0, 1}, {0, 2}},
-        {{1, 0}, {1, 1}, {1, 2}},
-        {{2, 0}, {2, 1}, {2, 2}},
-        {{0, 0}, {1, 1}, {2, 2}},
-        {{2, 0}, {1, 1}, {0, 2}}
-    };
-
     static const int Heuristic_Array[4][4] = {
-        {     0,   -10,  -100, -1000 },
-        {    10,     0,     0,     0 },
-        {   100,     0,     0,     0 },
-        {  1000,     0,     0,     0 }
+        {      0,   -10,  -500, -1000 },
+        {     10,     0,     0,     0 },
+        {    100,     0,     0,     0 },
+        {  10000,     0,     0,     0 }
     };
 
     short playerScore(0), otherScore(0);
@@ -434,4 +422,16 @@ short BoardState::GetPlacedToken(bool player)
     }else{
         return m_blackTokens;
     }
+}
+
+bool BoardState::IsEndOfGame(bool player)
+{
+    for(int i=0; i < WinningShot; ++i){
+        int score = EvaluateLine(ThreeInARow[i][0][0], ThreeInARow[i][0][1],
+                                 ThreeInARow[i][1][0], ThreeInARow[i][1][1],
+                                 ThreeInARow[i][2][0], ThreeInARow[i][2][1],
+                                 player);
+        if(std::abs(score) == 1000)return true;
+    }
+    return false;
 }
