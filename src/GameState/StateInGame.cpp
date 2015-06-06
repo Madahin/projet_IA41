@@ -299,23 +299,118 @@ void StateInGame::PrintMove(const Move &m)
     }
 }
 
+/**
+  * Move StateInGame::IAMovement()
+  * @Return Move: Meilleur mouvement de type [Move] (Le mouvement que l'IA devra effectuer)
+**/
 Move StateInGame::IAMovement()
 {
-    std::vector<Move> moves;
-    moves = Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase);
-    int index = 0;
-    int heuristic = MinMax(Board::Get().GetCurrentState(), MAX_DEPTH, true);
-    std::cout << "heuristic : " << heuristic << std::endl;
-    std::cout << "move num : " << moves.size() << std::endl;
-    std::cout << "i : " << index << std::endl;
-    return moves.at(heuristic);
+
+    /**
+     * @brief player : variable qui gère le boolean pour savoir quel joueur doit jouer
+     */
+    bool player = m_EvenPhase;
+
+    /**
+     * @brief state : copy of actual state
+     * +initialisation
+     */
+    BoardState state;
+    state = Board::Get().GetCurrentState();
+
+    /**
+     * @brief finalMove : Variable destinée à être retournée
+     * (Meilleur mouvement à effectuer par l'IA en fonction des paramètres)
+     */
+    Move finalMove;
+
+    /**
+     * @brief maxDepth : profondeur maximale de l'arbre
+     * permet de choisir la difficulté de l'IA
+     * (en choisissant combien de coup est-ce que l'IA peut 'prévoir')
+     */
+     int maxDepth = 6;
+
+    /**
+     * @brief infinite : valeur maximum d'un integer (simuler l'infini pour l'algorithme)
+     */
+    int infinite = std::numeric_limits<int>::max();
+
+    /**
+     * @brief alpha et beta pour l'algorithme "Etalage AlphaBeta"
+     * + Initialisation en fonction de maxVal
+     */
+    int alpha, beta;
+    alpha = -infinite;
+    beta = infinite;
+
+    // Pour tous les mouvements possibles de l'état actuel
+    std::vector<Move> possibleMoves;
+    possibleMoves = state.GetPossibleMove(player);
+    // on parcours tous les mouvements possibles en exécutant l'algorithme
+    for ( unsigned int i = 0; i < possibleMoves.size(); i++ ) {
+        int val = StateInGame::minimax(state.SimulateMove(possibleMoves.at(i)), maxDepth, alpha, beta, player);
+        if (val > alpha) { // Si la solution a été trouvée
+            alpha = val;
+            finalMove = possibleMoves.at(i);
+            std::cout << "solution trouve" << std::endl;
+        }
+    }
+
+    return finalMove; // renvoie le meilleur coup possible
+
+    //sécurité: si l'algorithme ne trouve rien, donc qu'il ne fonctionne pas, l'IA jouera le premier coup qu'il trouve dans son tableau de possibilitées
+    std::cout << "Attention: l'algorithme n'as pas fonctionné. (si la cause n'est pas directement au dessus de la ligne, l'erreur est inconnue)" << std::endl;
+    return  Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase).at(0);
+}
+
+/**
+ * int StateInGame::minimax(BoardState state, int depth, int a, int b, bool max)
+ * @brief StateInGame::minimax renvoie la valeur de l'algorithme minimax avec étalage alpha-beta
+ * @param state : BoardState actuel
+ * @param depth : profondeur a appliquer pour la recherche de la solution
+ * @param a : alpha (minimum value, -infini)
+ * @param b : beta (maximum value, +infini)
+ * @param max : boolean du joueur
+ * @return  valeur de l'algorithme minimax avec étalage alpha-beta
+ */
+int StateInGame::minimax(BoardState state, int depth, int a, int b, bool max)
+{
+    // Evalue l'état passé en paramètres, s'il correspond
+    int evalState = state.EvaluateFor(max);
+    // Si l'état de victoire est atteint, on renvoie directement l'information (c'est le meilleur coup)
+    // ou si la profondeur à atteint son maximum, l'IA ne vois pas encore d'issues possible
+    if (evalState  >= 900 || depth == 0) {
+        return evalState; // random value test
+    }
+    // On récupère tout les mouvements possible de l'état actuel pour le joueur
+    std::vector<Move> possibleMoves;
+    possibleMoves = state.GetPossibleMove(max);
+    if (max) {
+        // Si on est dans le cas Max de l'algorithme, on parcours tous les mouvements possibles
+        for (Move &move : possibleMoves) {
+            // On applique le min entre alpha et le retour de la foncton minimax
+            a = std::max(a, minimax(state.SimulateMove(move), depth - 1, a, b, false));
+            if (b <= a) return b; //  beta stop car beta est inférieur à alpha (règle)
+        }
+        return a;
+    } else {
+        // si on est dans le cas Min de l'algorithme, on parcours tous les mouvements possibles
+        for (Move &move : possibleMoves) {
+            // On applique le min entre beta et le retour de la foncton minimax
+            b = std::min(b, minimax(state.SimulateMove(move), depth - 1, a, b, true));
+            if (b <= a) return a; // beta stop car beta est inférieur à alpha (règle)
+        }
+        return b;
+    }
 }
 
 void StateInGame::PlayMove(Move m)
 {
+    PrintMove(m);
     if(!Board::Get().GetCurrentState().PlayMove(m))return;
     std::cout << ((m_EvenPhase)?"White":"Black") << " : ";
-    PrintMove(m);
+
     std::cout << "score : "  << Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) << std::endl;
     int score = Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase);
     bool winner = (std::abs(score) > 500)?true:false;
@@ -342,7 +437,7 @@ void StateInGame::PlayMove(Move m)
     }
     m_EvenPhase = !m_EvenPhase;
     m_whosPlaying.setTextureRect(sf::IntRect(232*((m_EvenPhase)?1:2), 0, 232, 232));
-    PrintPossibleMove(Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase));
+    //PrintPossibleMove(Board::Get().GetCurrentState().GetPossibleMove(m_EvenPhase));
     std::cout << "--------------------------" << std::endl;
 }
 

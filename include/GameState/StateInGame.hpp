@@ -31,6 +31,7 @@ public:
 private:
     Move IAMovement();
     int MinMax(BoardState &state, int depth, bool maxPlayer);
+    int minimax(BoardState state, int depth, int a, int b, bool max);
     void ComputePlayableMove();
     void PlayMove(Move m);
     void PrintPossibleMove(const std::vector<Move> &possibleMoves);

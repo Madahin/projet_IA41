@@ -103,12 +103,12 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
             if(y == 1){
                 Case c2 = getCase(x, 0);
                 if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
-                    m.movingCase.second = CARDINAL::SOUTH;
+                    m.movingCase.second = CARDINAL::NORD;
                     possibleMove.push_back(m);
                 }
                 c2 = getCase(x, 2);
                 if((c2.tokenColor == Color::EMPTY) && (c2.hasEmplacement)){
-                    m.movingCase.second = CARDINAL::NORD;
+                    m.movingCase.second = CARDINAL::SOUTH;
                     possibleMove.push_back(m);
                 }
             }
@@ -199,16 +199,12 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
     if(!m_isFirstMove){
         for(unsigned int i=0 ; i < possibleMove.size(); ++i){
             Move m = possibleMove.at(i);
-            /*if((((m.moveType == MOVE_EMPLACEMENT) && (m.multiMove == m_lastMove.multiMove)) || (m.moveType == MOVE_TOKEN))
-              && (m.movingCase.second + m_lastMove.movingCase.second == 0)){
-                possibleMove.erase(possibleMove.begin() + i);
-                i--;
-            }*/
-            if((m.movingCase.second + m_lastMove.movingCase.second) == 0 && (m.multiMove == m_lastMove.multiMove)){
+            if((m.movingCase.second + m_lastMove.movingCase.second == 0) &&
+               (m.moveType == m_lastMove.moveType) &&
+               (m.tokenPos.x == m_lastMove.tokenPos.x || m.tokenPos.y == m_lastMove.tokenPos.y)){
                 possibleMove.erase(possibleMove.begin() + i);
                 i--;
             }
-
             i++;
         }
     }
@@ -298,7 +294,9 @@ bool BoardState::PlayMove(const Move& move)
                 break;
         }
     }else if(move.moveType == MOVE_TOKEN){
-        if(!m_isFirstMove && (move.movingCase.second + m_lastMove.movingCase.second == 0))return false;
+        if(!m_isFirstMove && (move.movingCase.second + m_lastMove.movingCase.second == 0) &&
+          (move.moveType == m_lastMove.moveType) &&
+          (move.tokenPos.x == m_lastMove.tokenPos.x || move.tokenPos.y == m_lastMove.tokenPos.y))return false;
         sf::Vector2i posCase = move.movingCase.first;
         Case c1 = getCase(posCase.x, posCase.y);
         Case c2;
