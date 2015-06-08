@@ -29,8 +29,9 @@ public:
     sf::Vector2i GetCaseClicked(sf::Vector2i mousePos);
 
 private:
+    static const int INFINITE = std::numeric_limits<int>::max();
     Move IAMovement();
-    int minimax(BoardState state, int depth, int a, int b, bool max, bool player);
+    int negamax(BoardState state, int depth, int a, int b, bool max, bool player);
     void ComputePlayableMove();
     void PlayMove(Move m);
     void PrintPossibleMove(const std::vector<Move> &possibleMoves);

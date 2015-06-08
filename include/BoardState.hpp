@@ -31,7 +31,7 @@ public:
     bool Empty();
     int EvaluateFor(bool player);
     short GetPlacedToken(bool player);
-    bool IsEndOfGame(bool player);
+    short IsEndOfGame(bool player);
 
 private:
     int EvaluateLine(int x1, int y1, int x2, int y2, int x3, int y3, bool player);

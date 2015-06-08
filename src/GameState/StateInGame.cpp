@@ -332,24 +332,20 @@ Move StateInGame::IAMovement()
      int maxDepth = 6;
 
     /**
-     * @brief infinite : valeur maximum d'un integer (simuler l'infini pour l'algorithme)
-     */
-    int infinite = std::numeric_limits<int>::max();
-
-    /**
      * @brief alpha et beta pour l'algorithme "Etalage AlphaBeta"
      * + Initialisation en fonction de maxVal
      */
     int alpha, beta;
-    alpha = -infinite;
-    beta = infinite;
+    alpha = -INFINITE;
+    beta = INFINITE;
 
     // Pour tous les mouvements possibles de l'état actuel
     std::vector<Move> possibleMoves;
     possibleMoves = state.GetPossibleMove(player);
     // on parcours tous les mouvements possibles en exécutant l'algorithme
     for ( unsigned int i = 0; i < possibleMoves.size(); i++ ) {
-        int val = StateInGame::minimax(state.SimulateMove(possibleMoves.at(i)), maxDepth, alpha, beta, true, player);
+        int val = StateInGame::negamax(state.SimulateMove(possibleMoves.at(i)), maxDepth, alpha, beta, true, player);
+        std::cout << "he : " << val << std::endl;
         if (val > alpha) { // Si la solution a été trouvée
             alpha = val;
             finalMove = possibleMoves.at(i);
@@ -374,33 +370,24 @@ Move StateInGame::IAMovement()
  * @param max : boolean du joueur
  * @return  valeur de l'algorithme minimax avec étalage alpha-beta
  */
-int StateInGame::minimax(BoardState state, int depth, int a, int b, bool max, bool player)
+int StateInGame::negamax(BoardState state, int depth, int a, int b, bool max, bool player)
 {
     // Si l'état de victoire est atteint, on renvoie directement l'information (c'est le meilleur coup)
     // ou si la profondeur à atteint son maximum, l'IA ne vois pas encore d'issues possible
     if (state.IsEndOfGame(player) || depth == 0) {
         return state.EvaluateFor(player); // random value test
     }
+
+    int v;
     // On récupère tout les mouvements possible de l'état actuel pour le joueur
     std::vector<Move> possibleMoves;
-    possibleMoves = state.GetPossibleMove(player);
-    if (max) {
-        // Si on est dans le cas Max de l'algorithme, on parcours tous les mouvements possibles
+        possibleMoves = state.GetPossibleMove(player);
         for (Move &move : possibleMoves) {
             // On applique le min entre alpha et le retour de la foncton minimax
-            a = std::max(a, minimax(state.SimulateMove(move), depth - 1, a, b, false, !player));
+            a = std::max(a, -negamax(state.SimulateMove(move), depth - 1, -b, -a, !max, player));
             if (b <= a) return b; //  beta stop car beta est inférieur à alpha (règle)
         }
         return a;
-    } else {
-        // si on est dans le cas Min de l'algorithme, on parcours tous les mouvements possibles
-        for (Move &move : possibleMoves) {
-            // On applique le min entre beta et le retour de la foncton minimax
-            b = std::min(b, minimax(state.SimulateMove(move), depth - 1, a, b, true, !player));
-            if (b <= a) return a; // beta stop car beta est inférieur à alpha (règle)
-        }
-        return b;
-    }
 }
 
 void StateInGame::PlayMove(Move m)
@@ -411,22 +398,9 @@ void StateInGame::PlayMove(Move m)
 
     std::cout << "score : "  << Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase) << std::endl;
     int score = Board::Get().GetCurrentState().EvaluateFor(m_EvenPhase);
-    bool winner = Board::Get().GetCurrentState().IsEndOfGame(m_EvenPhase);
-    bool whiteWin = false;
-    if(score >= 600){
-        if(m_EvenPhase){
-            whiteWin = true;
-        }else{
-            whiteWin = false;
-        }
-    }else if(score <= -600){
-        if(m_EvenPhase){
-            whiteWin = false;
-        }else{
-            whiteWin = true;
-        }
-    }
-    if(winner){
+    short winner = Board::Get().GetCurrentState().IsEndOfGame(m_EvenPhase);
+    if(winner > 0){
+        bool whiteWin = (winner == 1);
         std::cout << "player " << ((whiteWin)?"White":"Black") << " Win !!!" << std::endl;
         m_winnerSprite.setTextureRect(sf::IntRect(232 * ((whiteWin)?1:2), 0, 232, 232));
         m_WinnerText.setColor(sf::Color(0, 178, 5));

@@ -41,6 +41,7 @@ std::vector<Move> BoardState::GetPossibleMove(bool player)
                 }
             }
         }
+        //return possibleMove;
     }
 
     Case middle = getCase(1, 1);
@@ -363,14 +364,16 @@ bool BoardState::Empty()
 int BoardState::EvaluateFor(bool player)
 {
     static const int Heuristic_Array[4][4] = {
-        {      0,   -10,  -500, -1000 },
+        {      0,   -10,  -100, -1000 },
         {     10,     0,     0,     0 },
         {    100,     0,     0,     0 },
-        {  10000,     0,     0,     0 }
+        {   1000,     0,     0,     0 }
     };
 
     short playerScore(0), otherScore(0);
     int boardScore = 0;
+
+    int coeff = (player)?1:-1;
 
     Color playerColor = ((player)?Color::WHITE:Color::BLACK);
     Color otherColor = ((!player)?Color::WHITE:Color::BLACK);
@@ -385,7 +388,7 @@ int BoardState::EvaluateFor(bool player)
                 otherScore++;
             }
         }
-        boardScore += Heuristic_Array[playerScore][otherScore];
+        boardScore += coeff*Heuristic_Array[playerScore][otherScore];
     }
     return boardScore;
 }
@@ -423,14 +426,24 @@ short BoardState::GetPlacedToken(bool player)
     }
 }
 
-bool BoardState::IsEndOfGame(bool player)
+short BoardState::IsEndOfGame(bool player)
 {
     for(int i=0; i < WinningShot; ++i){
         int score = EvaluateLine(ThreeInARow[i][0][0], ThreeInARow[i][0][1],
                                  ThreeInARow[i][1][0], ThreeInARow[i][1][1],
                                  ThreeInARow[i][2][0], ThreeInARow[i][2][1],
                                  player);
-        if(std::abs(score) == 1000)return true;
+
+        if(score == 1000){
+            if(!player)return 2;
+            else return 1;
+        }else if(score == -1000){
+            if(player)return 2;
+            else return 1;
+        }
     }
-    return false;
+    return 0;
 }
+
+
+
